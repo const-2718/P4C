@@ -95,7 +95,13 @@ int check_version(char *version)
 int check_path(char* path)
 {
     FILE *fp = fopen(path + 1, "r");
-    if(fp == NULL) {
+    while(*path != '.') {
+        path++;
+    }
+    
+    if(fp == NULL && strcmp(path, ".html") == 0) {
+        return -2;
+    } else if(fp == NULL) {
         return -1;
     } else {   
         fseek(fp, 0, SEEK_END);
@@ -142,6 +148,9 @@ void set_http_status(char** response, int status_code)
     switch(status_code) {
     case 200:
         strcpy(*response, "HTTP/1.1 200 OK\r\n");
+        break;
+    case 404:
+        strcpy(*response, "HTTP/1.1 404 Not Found\r\n");
         break;
     case 405:
         strcpy(*response, "HTTP/1.1 405 Method Not Allowed\r\n");
@@ -190,6 +199,7 @@ void set_http_header(char** response, int status_code, int content_length)
 {
     switch(status_code) {
     case 200:
+    case 404:
         strcat(*response, "Content-Type: text/html; charset=utf-8\r\n");
         strcat(*response, "Content-Length: ");
         
@@ -240,19 +250,30 @@ char *make_response(char *request)
 
     int content_length = check_path(path);
     if(content_length == -1) {
-        printf("path error: wrong path, check path agiain: %s\n", path);
+        printf("the file format is not supported\n");
         return NULL;
+    } else if(content_length == -2) {
+        printf("worong path: %s\n", path);
+        strcpy(path, "/notfound.html");
     }
 
     switch (get_method_enum(method)) {
     case GET:
-        set_http_status(&response, 200);
-        set_http_header(&response, 200, content_length);
-        
+        if(strcmp(path, "/notfound.html") != 0) {
+            set_http_status(&response, 200);
+            set_http_header(&response, 200, content_length);
+        } else {
+            set_http_status(&response, 404);
+            set_http_header(&response, 404, content_length);
+        }
+
+        printf("path: %s\n", path);
         char* html = load_html_file(path + 1);
+        printf("load file path sucess!!\n");
         strcat(response, html);
         free(html);
 
+        printf("response sucess!\n");
         break;
     case POST:
         
