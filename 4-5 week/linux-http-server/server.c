@@ -94,7 +94,12 @@ int check_version(char *version)
 
 int check_path(char* path)
 {
+    if(strcmp(path, "/") == 0) {
+        strcpy(path, "/redirection.html");
+    }
+
     FILE *fp = fopen(path + 1, "r");
+
     while(*path != '.') {
         path++;
     }
@@ -143,11 +148,12 @@ void set_http_status(char** response, int status_code)
     }
     *response = malloc(sizeof(char) * 1024);
 
-    printf("malloc sucess!\n");
-
     switch(status_code) {
     case 200:
         strcpy(*response, "HTTP/1.1 200 OK\r\n");
+        break;
+    case 308:
+        strcpy(*response, "HTTP/1.1 308 Moved Redirect\r\n");
         break;
     case 404:
         strcpy(*response, "HTTP/1.1 404 Not Found\r\n");
@@ -199,6 +205,8 @@ void set_http_header(char** response, int status_code, int content_length)
 {
     switch(status_code) {
     case 200:
+    case 308:
+        strcat(*response, "Location: /index.html\r\n");
     case 404:
         strcat(*response, "Content-Type: text/html; charset=utf-8\r\n");
         strcat(*response, "Content-Length: ");
@@ -259,12 +267,16 @@ char *make_response(char *request)
 
     switch (get_method_enum(method)) {
     case GET:
-        if(strcmp(path, "/notfound.html") != 0) {
-            set_http_status(&response, 200);
-            set_http_header(&response, 200, content_length);
-        } else {
+        if(strcmp(path, "/notfound.html") == 0) {
             set_http_status(&response, 404);
             set_http_header(&response, 404, content_length);
+        } else if(strcmp(path, "/redirection.html") == 0) {
+            set_http_status(&response, 308);
+            set_http_header(&response, 308, content_length);
+        }
+        else {
+            set_http_status(&response, 200);
+            set_http_header(&response, 200, content_length);
         }
 
         printf("path: %s\n", path);
