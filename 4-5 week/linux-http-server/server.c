@@ -41,12 +41,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if(listen(server_sock, LISTEN_QUEUE_MAX) == -1) {
+        printf("listen() failed\n");
+        return 1;
+    }
+
     while(1)
     {
-        if(listen(server_sock, LISTEN_QUEUE_MAX) == -1) {
-            printf("listen() failed\n");
-            return 1;
-        }
 
         client_sock = accept(server_sock, (struct sockaddr *)&client_sock_addr, &sock_addr_len);
         if(client_sock == -1) {
@@ -77,7 +78,6 @@ int main(int argc, char* argv[])
 
         
         close(client_sock);
-        //free(request);
     }
 
     close(server_sock);
@@ -92,15 +92,26 @@ int check_version(char *version)
     return 0;
 }
 
+void prevent_parent_dir(char* path) 
+{
+    int i = 0;
+    while(path[i++] != '\0') {
+        if(path[i] == '.' && path[i+1] == '.') {
+            strcpy(path, "/");
+        }
+    }
+}
+
 int check_path(char* path)
 {
+    prevent_parent_dir(path);
     if(strcmp(path, "/") == 0) {
         strcpy(path, "/redirection.html");
     }
 
     FILE *fp = fopen(path + 1, "r");
 
-    while(*path != '.') {
+    while(*path != '.' && *path != '\0') {
         path++;
     }
     
