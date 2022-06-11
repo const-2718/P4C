@@ -1,6 +1,6 @@
 from pwn import *
 
-e = ELF("prob/EasyFSB")
+e = ELF("./EasyFSB")
 p = process(e.path)
 
 payload  = b"/bin/sh;" 

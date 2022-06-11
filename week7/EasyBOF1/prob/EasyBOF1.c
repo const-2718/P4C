@@ -4,7 +4,7 @@
 */
 
 // ubuntu 18.04, gcc 7.5.0
-// gcc -o EasyBOF1 EasyBOF1.c -no-pie -fno-stack-protector -z norelro -z execstack
+// gcc -o EasyBOF1 EasyBOF1.c -no-pie -fno-stack-protector -z norelro -z execstack  
 
 #include <string.h>
 #include <unistd.h>
